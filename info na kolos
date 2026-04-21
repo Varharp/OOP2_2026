@@ -3,3 +3,4 @@ klasa abstrakcyjne
 konstruktor klasy nadzednej (super)
 polimorfizm ( przechowywanie obiejktow jako ich typy nadzedne)
 kozystanie z list i mapy i zbioru
+filtrowanie
