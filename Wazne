@@ -1,0 +1,88 @@
+1. Strategia rozwiązywania (Krok po Kroku)
+Krok 1: Szkielet klas i dziedziczenieZawsze zaczynaj od struktury.
+Jeśli widzisz „klasa abstrakcyjna X, po której dziedziczą Y i Z”, natychmiast stwórz pliki i użyj słów kluczowych abstract oraz extends.
+Wskazówka: Konstruktory w klasach dziedziczących muszą wywoływać super(parametry).
+
+Krok 2: Obsługa plików (CSV/Tekstowe)To najczęstszy „pożeracz czasu”. 
+Musisz mieć gotowy schemat na Scanner lub BufferedReader.
+Zwróć uwagę na separator (średnik ; lub przecinek ,). 
+Pamiętaj o pomijaniu linii nagłówkowych, jeśli treść zadania o tym wspomina.  
+
+Krok 3: Logika biznesowa i Daty 
+W zadaniach często pojawia się LocalDate lub LocalTime.
+Parsowanie dat: LocalDate.parse(text, formatter). 
+Obliczenia: Jeśli masz wzór (np. inflacja lub odległość punktów), wydziel go do osobnej metody. 
+
+Krok 4: Wyjątki (Custom Exceptions)
+Jeśli zadanie wymaga własnego wyjątku:
+Stwórz klasę extends Exception (jeśli ma być sprawdzany/checked). 
+Stwórz klasę extends RuntimeException (jeśli nie musi być przechwytywany).
+Nadpisz konstruktor i przekaż wiadomość do super(message).  
+
+2. Formuły
+A. Klasa bazowa i dziedziczenie
+public abstract class Product { // Podmień na Country/Clock
+    private final String name;
+
+    public Product(String name) {
+        this.name = name;
+    }
+
+    public String getName() { return name; }
+    
+    // Metoda abstrakcyjna do nadpisania
+    public abstract double getPrice(int year, int month); [cite: 471]
+}
+
+public class FoodProduct extends Product {
+    public FoodProduct(String name) {
+        super(name);
+    }
+
+    @Override
+    public double getPrice(int year, int month) {
+        // Logika specyficzna
+        return 0.0;
+    }
+}
+
+B. Passer CSV
+public static Map<String, City> parseFile(Path path) throws IOException {
+    Map<String, City> map = new HashMap<>();
+    List<String> lines = Files.readAllLines(path);
+    
+    for (int i = 1; i < lines.size(); i++) { // i=1 pominie nagłówek
+        String[] parts = lines.get(i).split(";"); // Zmień separator jeśli trzeba
+        // Przykład wyciągania danych:
+        String cityName = parts[0];
+        double lat = Double.parseDouble(parts[1]);
+        // map.put(cityName, new City(cityName, lat));
+    }
+    return map;
+}
+
+C. Własny Wyjątek (Checked Exception)
+public class CountryNotFoundException extends Exception { [cite: 389]
+    private String countryName;
+
+    public CountryNotFoundException(String countryName) {
+        super(countryName); // getMessage() zwróci nazwę 
+        this.countryName = countryName;
+    }
+}
+
+D. Sortowanie (Comparator)
+// Wewnątrz klasy (np. City):
+public static int worstTimezoneFit(City c1, City c2) {
+    double diff1 = Math.abs(c1.calculateDiff());
+    double diff2 = Math.abs(c2.calculateDiff());
+    return Double.compare(diff2, diff1); // diff2 pierwszy = malejąco [cite: 687]
+}
+
+// Użycie:
+list.sort(City::worstTimezoneFit);
+
+
+
+E. wypisywanie po przecinku w jednej lini
+String result = String.join(", ", listaNazwMiast); [cite: 264]
