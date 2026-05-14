@@ -108,3 +108,42 @@ public class Election {
         this.candidates.add(candidate);
     }
 }
+
+G. przykladowe wczytywanie pliku
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Election {
+    private List<Candidate> candidates = new ArrayList<>();
+
+    public List<Candidate> getCandidates() {
+        return new ArrayList<>(this.candidates);
+    }
+
+    // Nowa metoda z Kroku 3
+    public void populateCandidates(String filePath) {
+        try {
+            // Czytamy wszystkie linie z pliku
+            List<String> lines = Files.readAllLines(Path.of(filePath));
+            
+            // Mapujemy każdą linię na obiekt Candidate i dodajemy do listy
+            for (String line : lines) {
+                if (!line.isBlank()) {
+                    this.candidates.add(new Candidate(line.trim()));
+                }
+            }
+        } catch (IOException e) {
+            // Na kolokwium warto obsłużyć błąd, choćby prostym wypisaniem
+            System.err.println("Błąd podczas odczytu pliku: " + e.getMessage());
+        }
+    }
+
+    // Druga wymagana metoda
+    public void populate() {
+        // Wywołuje populateCandidates z nazwą pliku wspomnianą wcześniej
+        populateCandidates("kandydaci.txt");
+    }
+}
