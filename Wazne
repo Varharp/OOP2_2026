@@ -86,3 +86,25 @@ list.sort(City::worstTimezoneFit);
 
 E. wypisywanie po przecinku w jednej lini
 String result = String.join(", ", listaNazwMiast); [cite: 264]
+
+F. przyklad metody
+import java.util.ArrayList;
+import java.util.List;
+
+public class Election {
+    // Prywatne pole candidates - lista obiektów Candidate
+    private List<Candidate> candidates = new ArrayList<>();
+
+    /**
+     * Metoda zwraca nową listę będącą kopią oryginalnej listy,
+     * zachowując te same referencje do obiektów (płytka kopia).
+     */
+    public List<Candidate> getCandidates() {
+        return new ArrayList<>(this.candidates);
+    }
+    
+    // Opcjonalna metoda do dodawania kandydatów (przyda się przy czytaniu pliku)
+    public void addCandidate(Candidate candidate) {
+        this.candidates.add(candidate);
+    }
+}
