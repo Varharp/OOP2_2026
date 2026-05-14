@@ -1,0 +1,63 @@
+Ważne zagadnienia:
+1. Klasy i MetodyWyobraź sobie, że Klasa to projekt architektoniczny domu, a Obiekt to konkretny budynek postawiony na jego podstawie.Klasa:
+Szablon opisujący, jakie cechy (pola) i zachowania (metody) będzie miał obiekt.Metoda: Funkcja „zaszyta” w klasie. To konkretna akcja, którą obiekt może wykonać.Javapublic class Samochod {
+    String kolor; // Pole (cecha)
+
+    void jedz() { // Metoda (zachowanie)
+        System.out.println("Brum brum!");
+    }
+}
+2. Enkapsulacja (Hermetyzacja)To ukrywanie wnętrza obiektu przed światem zewnętrznym. 
+Chodzi o to, żeby nikt „z zewnątrz” nie mógł wpisać ujemnego przebiegu do Twojego licznika w aucie.
+Jak używać: Pola klasy ustawiamy jako private, a dostęp do nich dajemy przez publiczne metody: gettery (pobieranie) i settery (ustawianie).Javaprivate int predkosc;
+
+public void setPredkosc(int nowaPredkosc) {
+    if (nowaPredkosc >= 0) { // Logika ochronna
+        this.predkosc = nowaPredkosc;
+    }
+}
+3. DziedziczeniePozwala tworzyć nową klasę na bazie już istniejącej. Nowa klasa przejmuje cechy „rodzica”.Zastosowanie: Unikanie powtarzania kodu. Używamy słowa kluczowego extends.Javaclass Zwierze {
+    void oddychaj() { System.out.println("Oddycham..."); }
+}
+
+class Pies extends Zwierze { // Pies ma wszystko to, co Zwierze + swoje cechy
+    void szczekaj() { System.out.println("Hau!"); }
+}
+4. Klasy AbstrakcyjneTo „niepełne” klasy, z których nie można stworzyć obiektu (nie możesz stworzyć „zwierzęcia” jako takiego, musisz stworzyć konkretny gatunek). 
+Służą jako wzorzec dla innych klas.Javaabstract class Kszalt {
+    abstract void obliczPole(); // Każdy kształt musi to mieć, ale każdy liczy inaczej
+}
+
+5. Konstruktory klas nadrzędnychKiedy tworzysz obiekt klasy pochodnej (dziecko), Java najpierw musi „zbudować” rodzica. Służy do tego słowo super().
+Javaclass Rodzic {
+    Rodzic(String nazwisko) { ... }
+}
+
+class Dziecko extends Rodzic {
+    Dziecko(String nazwisko) {
+        super(nazwisko); // Wywołanie konstruktora rodzica
+    }
+}
+
+6. Polimorfizm (Wielopostaciowość)To zdolność obiektu do bycia traktowanym jak inny typ 
+(zazwyczaj typ swojego rodzica).Przykład: Masz listę typu Zwierze. Możesz tam wrzucić Psa, Kota i Ptaka. 
+Kiedy wywołasz na nich metodę .dajGlos(), każdy zareaguje po swojemu.
+7. Kolekcje: Listy, Mapy i Zbiory
+To kontenery na dane. Wybór zależy od tego, co chcesz osiągnąć:
+Typ                               Charakterystyka                                Przykład
+List(ArrayList)     Kolejność ma znaczenie, elementy mogą się powtarzać        Lista zakupów 
+Set (HashSet)       Elementy muszą być unikalne, brak gwarancji kolejności     Numery PESEL w bazie
+Map (HashMap)       Pary Klucz -> Wartość                                      Słownik (Słowo -> Definicja).
+
+8. Filtrowanie (Stream API)W nowoczesnej Javie nie musisz pisać długich pętli for, aby coś znaleźć. Używasz „Strumieni”.
+JavaList<Integer> liczby = List.of(1, 5, 8, 10);
+List<Integer> wiekszeNizPiecz = liczby.stream()
+    .filter(n -> n > 5) // Warunek logiczny
+    .toList();
+9. Metody StatyczneMetody przypisane do Klasy, a nie do konkretnego obiektu. Nie musisz tworzyć new MojaKlasa(), żeby ich użyć.
+Kiedy stosować: Gdy metoda jest narzędziem pomocniczym i nie potrzebuje danych z pól obiektu (np. obliczenia matematyczne).
+Przykład:
+Math.sqrt(16) – nie tworzysz obiektu klasy Math, po prostu używasz jej narzędzia.
+Javapublic static int dodaj(int a, int b) {
+    return a + b;
+}
