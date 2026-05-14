@@ -147,3 +147,14 @@ public class Election {
         populateCandidates("kandydaci.txt");
     }
 }
+
+H. przykladowe wywolanie metody
+
+    public void populate(){
+        populateCandidates("kandydaci.txt");
+    }
+} 
+tak to doslownie tyle c:
+
+
+
