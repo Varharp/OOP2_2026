@@ -49,6 +49,59 @@ List(ArrayList)     Kolejność ma znaczenie, elementy mogą się powtarzać    
 Set (HashSet)       Elementy muszą być unikalne, brak gwarancji kolejności     Numery PESEL w bazie
 Map (HashMap)       Pary Klucz -> Wartość                                      Słownik (Słowo -> Definicja).
 
+import java.util.*;
+
+// 1. KLASA - to nasz "szablon" studenta
+class Student {
+    String nazwisko;
+
+    Student(String nazwisko) {
+        this.nazwisko = nazwisko;
+    }
+
+    // To pozwala nam ładnie wypisać studenta w konsoli
+    @Override
+    public String toString() {
+        return "Student: " + nazwisko;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        
+        // --- LISTA (ArrayList) ---
+        // Zachowuje kolejność i pozwala na duplikaty
+        List<Student> lista = new ArrayList<>();
+        lista.add(new Student("Kowalski"));
+        lista.add(new Student("Nowak"));
+        lista.add(new Student("Kowalski")); // Duplikat - przejdzie bez problemu
+
+        System.out.println("LISTA (kolejność + duplikaty):");
+        System.out.println(lista);
+
+
+        // --- ZBIÓR (HashSet) ---
+        // Nie pozwala na duplikaty (pilnuje unikalności)
+        Set<String> zbior = new HashSet<>();
+        zbior.add("Kowalski");
+        zbior.add("Nowak");
+        zbior.add("Kowalski"); // Ten "Kowalski" zostanie zignorowany!
+
+        System.out.println("\nZBIÓR (tylko unikalne):");
+        System.out.println(zbior);
+
+
+        // --- MAPA (HashMap) ---
+        // Przechowuje pary: KLUCZ (np. ID) -> WARTOŚĆ (np. obiekt Studenta)
+        Map<Integer, Student> mapa = new HashMap<>();
+        mapa.put(123456, new Student("Kowalski"));
+        mapa.put(987654, new Student("Nowak"));
+
+        System.out.println("\nMAPA (Klucz -> Wartość):");
+        System.out.println("Student o indeksie 123456: " + mapa.get(123456));
+    }
+}
+
 8. Filtrowanie (Stream API)W nowoczesnej Javie nie musisz pisać długich pętli for, aby coś znaleźć. Używasz „Strumieni”.
 JavaList<Integer> liczby = List.of(1, 5, 8, 10);
 List<Integer> wiekszeNizPiecz = liczby.stream()
