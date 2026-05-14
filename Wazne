@@ -157,4 +157,33 @@ H. przykladowe wywolanie metody
 tak to doslownie tyle c:
 
 
+I. przykladowe uzycie mapy i listy:
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Vote {
+    // Prywatna mapa: Klucz to Candidate, wartość to liczba głosów (Integer)
+    private Map<Candidate, Integer> votesForCandidate = new HashMap<>();
+
+    // Prywatna lista: wojewodztwo, powiat, gmina
+    private List<String> location;
+
+    // Konstruktor (przyda się, żeby zainicjalizować lokalizację)
+    public Vote(List<String> location) {
+        this.location = location;
+    }
+
+    // Akcesory (opcjonalne, ale zwykle wymagane na kolosach)
+    public Map<Candidate, Integer> getVotesForCandidate() {
+        return votesForCandidate;
+    }
+
+    public List<String> getLocation() {
+        return location;
+    }
+}
+
+
 
