@@ -1,0 +1,242 @@
+1. Klasa wyjątku CountryNotFoundException (Krok 3)
+Wyjątek typu checked (dziedziczy po Exception), co wymusza obsługę lub przekazanie go dalej.
+public class CountryNotFoundException extends Exception {
+    private String countryName;
+
+    public CountryNotFoundException(String countryName) {
+        this.countryName = countryName;
+    }
+
+    @Override
+    public String getMessage() {
+        return countryName; // Zwraca nazwę nieznalezionego państwa [cite: 32]
+    }
+}
+
+2. Klasa abstrakcyjna Country oraz klasy potomne (Kroki 1, 2, 3, 7, 8, 9)
+Główna klasa zawierająca logikę przetwarzania plików CSV, sortowania i zapisu danych.
+import java.io.*;
+import java.nio.file.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+public abstract class Country {
+    private final String name;
+    private static String confirmedPath;
+    private static String deathsPath;
+
+    public Country(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    // Krok 2: Ustawianie ścieżek do plików [cite: 23]
+    public static void setFiles(String confirmed, String deaths) throws FileNotFoundException {
+        if (!Files.exists(Paths.get(confirmed)) || !Files.isReadable(Paths.get(confirmed))) {
+            throw new FileNotFoundException(confirmed);
+        }
+        if (!Files.exists(Paths.get(deaths)) || !Files.isReadable(Paths.get(deaths))) {
+            throw new FileNotFoundException(deaths);
+        }
+        confirmedPath = confirmed;
+        deathsPath = deaths;
+    }
+
+    // Krok 3: Prywatna klasa pomocnicza [cite: 33]
+    private static class CountryColumns {
+        public final int firstColumnIndex;
+        public final int columnCount;
+
+        public CountryColumns(int firstColumnIndex, int columnCount) {
+            this.firstColumnIndex = firstColumnIndex;
+            this.columnCount = columnCount;
+        }
+    }
+
+    // Krok 3: Wyznaczanie kolumn dla danego kraju [cite: 34, 35]
+    private static CountryColumns getCountryColumns(String header, String countryName) throws CountryNotFoundException {
+        String[] cols = header.split(";");
+        int firstIndex = -1;
+        int count = 0;
+
+        for (int i = 1; i < cols.length; i++) {
+            if (cols[i].equals(countryName)) {
+                if (firstIndex == -1) firstIndex = i;
+                count++;
+            }
+        }
+
+        if (firstIndex == -1) {
+            throw new CountryNotFoundException(countryName);
+        }
+        return new CountryColumns(firstIndex, count);
+    }
+
+    // Krok 2, 5: Wczytywanie danych z CSV [cite: 28, 44]
+    public static Country fromCsv(String countryName) throws CountryNotFoundException {
+        try (BufferedReader brConf = new BufferedReader(new FileReader(confirmedPath));
+             BufferedReader brDeath = new BufferedReader(new FileReader(deathsPath))) {
+
+            String header1 = brConf.readLine(); // Wiersz z krajami [cite: 5]
+            brDeath.readLine(); // Pomiń nagłówek w drugim pliku
+            
+            String header2 = brConf.readLine(); // Wiersz z prowincjami [cite: 6]
+            brDeath.readLine();
+
+            CountryColumns cc = getCountryColumns(header1, countryName);
+            Country result;
+
+            if (cc.columnCount == 1) {
+                result = new CountryWithoutProvinces(countryName);
+            } else {
+                String[] provinces = header2.split(";");
+                CountryWithoutProvinces[] provinceArray = new CountryWithoutProvinces[cc.columnCount];
+                for (int i = 0; i < cc.columnCount; i++) {
+                    provinceArray[i] = new CountryWithoutProvinces(provinces[cc.firstColumnIndex + i]);
+                }
+                result = new CountryWithProvinces(countryName, provinceArray);
+            }
+
+            // Krok 5: Wczytywanie statystyk dla każdej daty [cite: 45, 48]
+            String lineConf, lineDeath;
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yy");
+
+            while ((lineConf = brConf.readLine()) != null && (lineDeath = brDeath.readLine()) != null) {
+                String[] partsConf = lineConf.split(";");
+                String[] partsDeath = lineDeath.split(";");
+                LocalDate date = LocalDate.parse(partsConf[0], formatter);
+
+                if (result instanceof CountryWithoutProvinces) {
+                    int c = Integer.parseInt(partsConf[cc.firstColumnIndex]);
+                    int d = Integer.parseInt(partsDeath[cc.firstColumnIndex]);
+                    ((CountryWithoutProvinces) result).addDailyStatistic(date, c, d);
+                } else {
+                    CountryWithProvinces cwp = (CountryWithProvinces) result;
+                    for (int i = 0; i < cc.columnCount; i++) {
+                        int c = Integer.parseInt(partsConf[cc.firstColumnIndex + i]);
+                        int d = Integer.parseInt(partsDeath[cc.firstColumnIndex + i]);
+                        ((CountryWithoutProvinces) cwp.provinces[i]).addDailyStatistic(date, c, d);
+                    }
+                }
+            }
+            return result;
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    // Krok 6: Przeciążona metoda fromCsv dla tablicy nazw [cite: 49, 50]
+    public static Country[] fromCsv(String[] countryNames) {
+        List<Country> list = new ArrayList<>();
+        for (String name : countryNames) {
+            try {
+                list.add(fromCsv(name));
+            } catch (CountryNotFoundException e) {
+                System.out.println(e.getMessage()); // Wyświetlenie nazwy brakującego państwa [cite: 52]
+            }
+        }
+        return list.toArray(new Country[0]);
+    }
+
+    // Metody abstrakcyjne (Krok 7) [cite: 54]
+    public abstract int getConfirmedCases(LocalDate date);
+    public abstract int getDeaths(LocalDate date);
+    public abstract List<LocalDate> getAllDates(); // Pomocnicza do zapisu
+
+    // Krok 8: Sortowanie po zgonach w zadanym okresie [cite: 60, 61]
+    public static void sortByDeaths(List<Country> countries, LocalDate start, LocalDate end) {
+        countries.sort((c1, c2) -> {
+            int d1 = 0, d2 = 0;
+            for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
+                d1 += c1.getDeaths(d);
+                d2 += c2.getDeaths(d);
+            }
+            return Integer.compare(d2, d1); // Sortowanie malejące
+        });
+    }
+
+    // Krok 9: Zapis do pliku [cite: 64, 65]
+    public void saveToDataFile(String path) {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(path))) {
+            DateTimeFormatter outFmt = DateTimeFormatter.ofPattern("d.MM.yy");
+            for (LocalDate date : getAllDates()) {
+                pw.printf("%s\t%d\t%d\n", date.format(outFmt), getConfirmedCases(date), getDeaths(date));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+3. Klasa CountryWithoutProvinces (Krok 4, 7)
+import java.time.LocalDate;
+import java.util.*;
+
+public class CountryWithoutProvinces extends Country {
+    private Map<LocalDate, int[]> stats = new TreeMap<>(); // Klucz: data, Wartość: [zachorowania, zgony]
+
+    public CountryWithoutProvinces(String name) {
+        super(name);
+    }
+
+    public void addDailyStatistic(LocalDate date, int confirmed, int deaths) {
+        stats.put(date, new int[]{confirmed, deaths});
+    }
+
+    @Override
+    public int getConfirmedCases(LocalDate date) {
+        return stats.containsKey(date) ? stats.get(date)[0] : 0;
+    }
+
+    @Override
+    public int getDeaths(LocalDate date) {
+        return stats.containsKey(date) ? stats.get(date)[1] : 0;
+    }
+
+    @Override
+    public List<LocalDate> getAllDates() {
+        return new ArrayList<>(stats.keySet());
+    }
+}
+
+4. Klasa CountryWithProvinces (Krok 1, 7)   
+import java.time.LocalDate;
+import java.util.*;
+
+public class CountryWithProvinces extends Country {
+    public final Country[] provinces;
+
+    public CountryWithProvinces(String name, Country[] provinces) {
+        super(name);
+        this.provinces = provinces;
+    }
+
+    @Override
+    public int getConfirmedCases(LocalDate date) {
+        int sum = 0;
+        for (Country p : provinces) {
+            sum += p.getConfirmedCases(date); // Rekurencja [cite: 58]
+        }
+        return sum;
+    }
+
+    @Override
+    public int getDeaths(LocalDate date) {
+        int sum = 0;
+        for (Country p : provinces) {
+            sum += p.getDeaths(date); // Rekurencja [cite: 58]
+        }
+        return sum;
+    }
+
+    @Override
+    public List<LocalDate> getAllDates() {
+        if (provinces.length > 0) return provinces[0].getAllDates();
+        return new ArrayList<>();
+    }
+}
+
